@@ -48,11 +48,11 @@ Output is to the terminal, to redirect to file use normal cli tools.
 
 ## Defaults
 
-| option | default |
-| ### | ### |
-| model | text-davinci-003 |
-| temperature | 0.9 |
-| tokens | 1000 |
+| option      | default          |
+|-------------|------------------|
+| model       | text-davinci-003 |
+| temperature | 0.9              |
+| tokens      | 1000             |
 
 
 ## Using
