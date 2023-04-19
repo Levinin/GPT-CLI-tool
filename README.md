@@ -8,12 +8,12 @@ This application is intended as a very basic tool, really for my own use, that i
 Install the openai package to a python environment with: 
 > mamba install openai
 
-Set OPENAI_API_KEY environment variable to your own API key.
+Set OPENAI_API_KEY environment variable to your own API key.<br>
 Set OPENAI_ORG environment variable to your own org ID.
 
 This is best done in your ~/.bashrc file with something like:
-export OPENAI_API_KEY='....'
-export OPENAI_ORG='....'
+> export OPENAI_API_KEY='....'
+> export OPENAI_ORG='....'
 
 I also recommend creating an alias such as:
 > alias gpt='python path/to/python file'
