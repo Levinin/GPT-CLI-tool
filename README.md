@@ -12,7 +12,7 @@ Set OPENAI_API_KEY environment variable to your own API key.<br>
 Set OPENAI_ORG environment variable to your own org ID.
 
 This is best done in your ~/.bashrc file with something like:
-> export OPENAI_API_KEY='....'
+> export OPENAI_API_KEY='....'<br>
 > export OPENAI_ORG='....'
 
 I also recommend creating an alias such as:
