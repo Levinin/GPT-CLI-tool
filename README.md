@@ -23,25 +23,26 @@ so you can run it from anywhere very easily.
 ## Options
 To view the help options simply:
 > gpt --help
+```
+usage: main.py [-h] [-p PROMPT] [-m {text-ada-001,text-davinci-003,text-curie-001}] [-t TEMPERATURE] [-o TOKENS] [-f FILE]
 
->usage: main.py [-h] [-p PROMPT] [-m {text-ada-001,text-davinci-003,text-curie-001}] [-t TEMPERATURE] [-o TOKENS] [-f FILE]
->
->Prompt GPT using the API.
->
->options:
->  -h, --help            show this help message and exit
->  -p PROMPT, --prompt PROMPT
->                        The full prompt on the command line.
->  -m {text-ada-001,text-davinci-003,text-curie-001}, --model {text-ada-001,text-davinci-003,text-curie-001}
->                        The model to use.
->  -t TEMPERATURE, --temperature TEMPERATURE
->                        The model temperature.
->  -o TOKENS, --tokens TOKENS
->                        Max tokens for the generated reply.
->  -f FILE, --file FILE  A file containing a prompt.
+Prompt GPT using the API.
+
+options:
+  -h, --help            show this help message and exit
+  -p PROMPT, --prompt PROMPT
+                        The full prompt on the command line.
+  -m {text-ada-001,text-davinci-003,text-curie-001}, --model {text-ada-001,text-davinci-003,text-curie-001}
+                        The model to use.
+  -t TEMPERATURE, --temperature TEMPERATURE
+                        The model temperature.
+  -o TOKENS, --tokens TOKENS
+                        Max tokens for the generated reply.
+  -f FILE, --file FILE  A file containing a prompt.
+```
 
 All options except --file and --prompt have defaults, so it is possible to run as follows:
-> gpt -f prompt.txt
+> gpt -f prompt.txt<br>
 > gpt -p "Give me 3 activities that are fun for kids birthday parties."
 
 Output is to the terminal, to redirect to file use normal cli tools.
@@ -56,8 +57,8 @@ Output is to the terminal, to redirect to file use normal cli tools.
 
 
 ## Using
-There are two basic modes; immediate prompt and file-based prompt.
-For immediate prompts, it will simply take the cli argument and pass it to the API.
+There are two basic modes; immediate prompt and file-based prompt.<br>
+For immediate prompts, it will simply take the cli argument and pass it to the API.<br>
 For file prompts, it will simple read the file and pass it to the API.
 
 ## Future
