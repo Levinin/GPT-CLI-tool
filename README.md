@@ -85,8 +85,8 @@ For file prompts, it reads the file and passes it to the API.
 If the `--background` option is selected, it will scan through the history and select up to 3 items it thinks are 
 related to the question being asked. This is still a bit rough, and it isn't always correct. This is not intended to 
 compete with the way ChatGPT works, this is intended to allow a longer-term memory over a longer period and will be 
-more helpful over time as the number of prompts on a particular topic increases. However, it is quite a lot slower than 
-the default behaviour.
+more helpful over time as the number of prompts on a particular topic increases. Personal usage so far indicates this 
+additional context helps since it grounds the responses in my previous questions making them easier to understand.
 
 #### Note, in this mode it does submit more than 1 prompt, so it will use more tokens than you expect from the raw prompt text you have entered.
 

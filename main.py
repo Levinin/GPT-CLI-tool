@@ -201,18 +201,21 @@ def send_prompt(new_prompt, args):
     """
     # Importance requires davinci.
     importance: int
-    importance_prompt = prompt_texts.get_importance_prompt() + new_prompt
+    importance_prompt = ' '.join((prompt_texts.get_importance_prompt() + new_prompt).split())
     importance = get_prompt_importance(query_gpt(importance_prompt, "text-davinci-003", 20, 0.9))
 
     # Get the background from previous conversations if the user chose that options
     if args.background:
-        full_prompt = get_background_from_previous(new_prompt) + "\n\nThe following is the prompt:\n" + new_prompt
+        output_text = get_background_from_previous(new_prompt) + \
+                      "\n\n" + "-" * 20 + "\nThe following is the prompt:\n" + new_prompt + "\n" + "-" * 20 + "\n"
+        full_prompt = get_background_from_previous(new_prompt) + " " + "The following is the prompt: " + new_prompt
     else:
-        full_prompt = "The following is the prompt: \n" + new_prompt
-    print(" ".join(full_prompt.split()))
+        full_prompt = "The following is the prompt: " + new_prompt
+        output_text = "\n\n" + "-" * 20 + "\nThe following is the prompt:\n" + new_prompt + "\n" + "-" * 20 + "\n"
+    print(output_text)
 
     # Now actually send the prompt.
-    response = query_gpt(full_prompt, args.model, args.tokens, args.temperature)
+    response = query_gpt(" ".join(full_prompt.split()), args.model, args.tokens, args.temperature)
     manage_response(response)
 
     memory = (response["id"], full_prompt, response["usage"]["total_tokens"], args.model,

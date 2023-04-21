@@ -9,7 +9,7 @@ def get_importance_prompt() -> str:
     """Return a prompt asking GPT to give an importance score to the prompt."""
     return """
     I need you to rate a question on an integer scale of 1 to 10 where 1 is least important and 10 is most important.
-    By important I mean that the question is asking something specific about a topic that is unlikely to be common knowledge and requires specialist knowledge to answer.
+    By important I mean that the question is asking something specific about a topic that requires expert specialist knowledge to answer accurately.
     In the future, this will be used to rank the questions. Here are some examples:
     - Example Question 1: What colour is grass? Example Importance 1: 1
     - Example Question 2: How could I modify a model-free algorithm such as A2C so that it incorporates imagination rollout planning in the manner of I2A? Example Importance: 9 
