@@ -109,7 +109,7 @@ def get_prompt_importance(response: dict) -> int:
 def create_temp_calc_table(write_cur):
     write_cur.execute('''
                     CREATE TEMPORARY TABLE calc_scores AS
-                    SELECT id, prompt, response, importance, timestamp, embedding FROM history                    
+                    SELECT id, prompt, response, importance, timestamp, embedding FROM history;                    
                     ''')
                     # WHERE importance > 5;
 
@@ -136,19 +136,11 @@ def get_most_relevant_history(read_cur, write_cur, prompt_enc):
 
     read_cur.execute("SELECT * FROM calc_scores;")
 
-    # # Get prompt tokens for comparison.
-    # prompt_enc = tokenizer.encode(new_prompt, add_special_tokens=True, truncation=True, return_tensors="pt",
-    #                               padding='max_length', max_length=512).float()
-
     # Each row will be a tuple in the form (id, 'What colour is the sky?', 'blue', 10, '2023-04-20 16:35:10', <embedding>, None, None, None)
     for row in read_cur:
         # Compare the prompt embedding to the history embedding.
-        # This code calculates the cosine similarity between the prompt embedding and the embedding of the generated text.
-        # The generated text is stored in the 5th column of the input row. The prompt embedding is stored in the 6th column.
-        # The similarity score is stored in the 7th column.
-
         similarity_score = torch.nn.functional.cosine_similarity(prompt_enc, torch.tensor(eval(row[5])), dim=-1).item()
-
+        print(f"Got a similarity score of {similarity_score}")
         importance_score = (row[3] - 6) / 4
         recency_score = (datetime.fromisoformat(row[4]) - oldest) / (newest - oldest)
         total_score = similarity_score + importance_score + recency_score

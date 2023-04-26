@@ -26,9 +26,19 @@ def get_summary_prompt() -> str:
 def get_conv_plan_prompt() -> str:
     """A prompt to help with conversation planning."""
     return """
-    Please help me with this, if clarifications would help your reply, give me questions in the form 
-    {'q1': 'the question', 'q2':'the question'} 
-    and I will help you with that.
+    Please ask clarifying questions if you need to. For instance, if I asked what to pack for holiday, you might ask questions such as:
+    1. Where are you going on holiday?
+    2. How long are you going on holiday for?
+    3. What activities do you expect to do on holiday?
+
+    If I reply:
+    1. Spain
+    2. 3 weeks
+    3. Swimming in the sea
+
+    You may then advise me to take clothes for warm weather and swimming, sun-tan lotion and so on.
+
+    Apply this idea to my question.
     """
 
 
