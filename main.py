@@ -65,7 +65,8 @@ def manage_response(response: json):
     print(f'The message ended due to {response["choices"][0]["finish_reason"]}.')
 
 
-def get_prompt_from_file(file_path: str) -> [str, None]:
+def get_prompt_from_file(file_path: str):   # -> [str, None]:
+    """Get the prompt from a file when this option is chosen. If the file doesn't exist, return None."""
     if os.path.isfile(file_path):
         text_file = open(file_path, "r")
         data = text_file.read()
@@ -75,6 +76,7 @@ def get_prompt_from_file(file_path: str) -> [str, None]:
 
 
 def get_database_connection() -> sqlite3.Connection:
+    """Get a connection to the database. If connection is not possible, return None."""
     conn = None
     try:
         conn = sqlite3.connect(os.getenv("PROMPT_HISTORY_DB"))
@@ -84,11 +86,11 @@ def get_database_connection() -> sqlite3.Connection:
     return conn
 
 
-def add_to_database(memory):
+def add_to_database(memory) -> None:
     conn = get_database_connection()
     if conn:
-        sql = ''' INSERT INTO history(id, prompt, tokens, model, finish, response, importance)
-                      VALUES(?,?,?,?,?,?,?) '''
+        sql = ''' INSERT INTO history(id, prompt, tokens, model, finish, response, importance, embedding)
+                      VALUES(?,?,?,?,?,?,?,?) '''
         cur = conn.cursor()
         cur.execute(sql, memory)
         conn.commit()
@@ -107,7 +109,7 @@ def get_prompt_importance(response: dict) -> int:
 def create_temp_calc_table(write_cur):
     write_cur.execute('''
                     CREATE TEMPORARY TABLE calc_scores AS
-                    SELECT id, prompt, response, importance, timestamp FROM history                    
+                    SELECT id, prompt, response, importance, timestamp, embedding FROM history                    
                     ''')
                     # WHERE importance > 5;
 
@@ -122,7 +124,7 @@ def create_temp_calc_table(write_cur):
                     ''')
 
 
-def get_most_relevant_history(read_cur, write_cur, new_prompt):
+def get_most_relevant_history(read_cur, write_cur, prompt_enc):
     """Get min's and max's and then loop over the new table and do the calculations to find the
     most relevant items from the history."""
 
@@ -134,15 +136,18 @@ def get_most_relevant_history(read_cur, write_cur, new_prompt):
 
     read_cur.execute("SELECT * FROM calc_scores;")
 
-    # Get prompt tokens for comparison.
-    prompt_enc = tokenizer.encode(new_prompt, add_special_tokens=True, truncation=True, return_tensors="pt",
-                                  padding='max_length', max_length=512).float()
+    # # Get prompt tokens for comparison.
+    # prompt_enc = tokenizer.encode(new_prompt, add_special_tokens=True, truncation=True, return_tensors="pt",
+    #                               padding='max_length', max_length=512).float()
 
-    # Each row will be a tuple in the form (id, 'What colour is the sky?', 10, '2023-04-20 16:35:10', None, None, None)
+    # Each row will be a tuple in the form (id, 'What colour is the sky?', 'blue', 10, '2023-04-20 16:35:10', <embedding>, None, None, None)
     for row in read_cur:
-        row_enc = tokenizer.encode((row[1] + row[2]), add_special_tokens=True, truncation=True, return_tensors="pt",
-                                   padding='max_length', max_length=512).float()
-        similarity_score = torch.nn.functional.cosine_similarity(prompt_enc, row_enc, dim=-1).item()
+        # Compare the prompt embedding to the history embedding.
+        # This code calculates the cosine similarity between the prompt embedding and the embedding of the generated text.
+        # The generated text is stored in the 5th column of the input row. The prompt embedding is stored in the 6th column.
+        # The similarity score is stored in the 7th column.
+
+        similarity_score = torch.nn.functional.cosine_similarity(prompt_enc, torch.tensor(eval(row[5])), dim=-1).item()
 
         importance_score = (row[3] - 6) / 4
         recency_score = (datetime.fromisoformat(row[4]) - oldest) / (newest - oldest)
@@ -161,24 +166,27 @@ def get_most_relevant_history(read_cur, write_cur, new_prompt):
     read_cur.execute("""
                         SELECT prompt, response
                         FROM calc_scores
-                        WHERE similarity > 0.3
+                        WHERE similarity > 0.4
                         ORDER BY total DESC
                         LIMIT 3;
                         """)
     return read_cur.fetchall()
 
 
-def get_background_from_previous(new_prompt) -> str:
+def get_background_from_previous(prompt_enc) -> str:
     conn = get_database_connection()
     if conn is None:
         print("Database error, using original prompt.")
-        return new_prompt
+        return " "
 
     write_cur = conn.cursor()
     read_cur = conn.cursor()
 
     create_temp_calc_table(write_cur)
-    most_relevant_history = get_most_relevant_history(read_cur, write_cur, new_prompt)
+
+    
+
+    most_relevant_history = get_most_relevant_history(read_cur, write_cur, prompt_enc)
 
     # print(most_relevant_history)
 
@@ -204,11 +212,15 @@ def send_prompt(new_prompt, args):
     importance_prompt = ' '.join((prompt_texts.get_importance_prompt() + new_prompt).split())
     importance = get_prompt_importance(query_gpt(importance_prompt, "text-davinci-003", 20, 0.9))
 
+    # Tokenize the prompt for comparison and storage.
+    prompt_enc = tokenizer.encode(new_prompt, add_special_tokens=True, truncation=True, return_tensors="pt",
+                                  padding='max_length', max_length=512).float()
+
     # Get the background from previous conversations if the user chose that options
     if args.background:
-        output_text = get_background_from_previous(new_prompt) + \
+        output_text = get_background_from_previous(prompt_enc) + \
                       "\n\n" + "-" * 20 + "\nThe following is the prompt:\n" + new_prompt + "\n" + "-" * 20 + "\n"
-        full_prompt = get_background_from_previous(new_prompt) + " " + "The following is the prompt: " + new_prompt
+        full_prompt = get_background_from_previous(prompt_enc) + " " + "The following is the prompt: " + new_prompt
     else:
         full_prompt = "The following is the prompt: " + new_prompt
         output_text = "\n\n" + "-" * 20 + "\nThe following is the prompt:\n" + new_prompt + "\n" + "-" * 20 + "\n"
@@ -219,7 +231,7 @@ def send_prompt(new_prompt, args):
     manage_response(response)
 
     memory = (response["id"], full_prompt, response["usage"]["total_tokens"], args.model,
-              response["choices"][0]["finish_reason"], response["choices"][0]["text"], importance)
+              response["choices"][0]["finish_reason"], response["choices"][0]["text"], importance, str(prompt_enc.numpy().tolist()))
     add_to_database(memory)
 
 
