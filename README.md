@@ -24,6 +24,7 @@ sqlite> PRAGMA table_info(history);
 5|response|TEXT|1||0
 6|importance|INT|1||0
 7|timestamp|DATETIME|0|CURRENT_TIMESTAMP|0
+8|embedding|BLOB|0||0
 ```
 
 For API access you will need to do the following once you have a key:<br>
