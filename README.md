@@ -100,19 +100,19 @@ additional context helps since it grounds the responses in my previous questions
 <br>
 
 ## Example conversations
-```terminal
-$ gpt -p "What is the most important consideration in continual learning?"
+
+```$ gpt -p "What is the most important consideration in continual learning?"
 
 The most important consideration in continual learning depends on the context. What type of learning are you referring to? Is it academic, professional, or personal development? What is the goal of the learning - to acquire knowledge, develop skills, or gain experience? Are there any specific topics that need to be covered? Do you have a timeline for completing this learning?
 
 --------------------
 Please enter any clarifications: I am referring to continual reinforcement learning in the contexts of robots which must operate in the real world completing tasks such as finding people in distress.
 
-The most important consideration in continual reinforcement learning for robots completing tasks such as finding people in distress is the ability to accurately perceive and interpret the environment. This includes being able to identify potential hazards, navigate around obstacles, and recognize objects of interest. The robot must also be able to learn from its experiences, so that it can adapt itself to different environments and situations. Additionally, it should be able to make decisions based on its understanding of the environment and any external input received from sensors or other robots. Finally, the robot must have robust safety protocols in place so that it does not cause harm while carrying out its task.
-```
+The most important consideration in continual reinforcement learning for robots completing tasks such as finding people in distress is the ability to accurately perceive and interpret the environment. This includes being able to identify potential hazards, navigate around obstacles, and recognize objects of interest. The robot must also be able to learn from its experiences, so that it can adapt itself to different environments and situations. Additionally, it should be able to make decisions based on its understanding of the environment and any external input received from sensors or other robots. Finally, the robot must have robust safety protocols in place so that it does not cause harm while carrying out its task.```
 
-```terminal
-$ gpt -p "How should I redecorate my bedroom?"
+
+
+```$ gpt -p "How should I redecorate my bedroom?"
 
 
 
@@ -145,9 +145,8 @@ To answer your question, here are some suggestions for redecorating your bedroom
 2. Look for inexpensive but stylish furniture pieces that will fit with the modern style and complement your existing furniture. Consider getting rid of any furniture that is too bulky or outdated and replace it with something more modern looking. 
 3. Hang some artwork or other wall decorations to add personality and interest to the room without breaking the bank. You can also try making your own art using materials you have around the house such as old frames, magazines, fabric scraps etc..  
 4. Add accessories such as throw pillows and blankets to bring in some texture and color into the room while still keeping it elegant and modern looking at a low cost price point. 
-5. If possible, rearrange existing furniture so that it looks more organized and intentional rather than cluttered; this can help make even older pieces look new again!
+5. If possible, rearrange existing furniture so that it looks more organized and intentional rather than cluttered; this can help make even older pieces look new again!```
 
-```
 
 <br>
 
