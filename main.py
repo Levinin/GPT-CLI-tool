@@ -140,7 +140,7 @@ def get_most_relevant_history(read_cur, write_cur, prompt_enc):
     for row in read_cur:
         # Compare the prompt embedding to the history embedding.
         similarity_score = torch.nn.functional.cosine_similarity(prompt_enc, torch.tensor(eval(row[5])), dim=-1).item()
-        print(f"Got a similarity score of {similarity_score}")
+        # print(f"Got a similarity score of {similarity_score}")
         importance_score = (row[3] - 6) / 4
         recency_score = (datetime.fromisoformat(row[4]) - oldest) / (newest - oldest)
         total_score = similarity_score + importance_score + recency_score
@@ -155,8 +155,9 @@ def get_most_relevant_history(read_cur, write_cur, prompt_enc):
         #       f"Recency: {recency_score}, Total: {total_score}.")
 
     # Now query to get the top past prompts where similarity is also above a threshold.
+    # Was using the prompt and return, but this doesn't work so well as just the prompt.
     read_cur.execute("""
-                        SELECT prompt, response
+                        SELECT prompt
                         FROM calc_scores
                         WHERE similarity > 0.4
                         ORDER BY total DESC
@@ -176,16 +177,14 @@ def get_background_from_previous(prompt_enc) -> str:
 
     create_temp_calc_table(write_cur)
 
-    
-
     most_relevant_history = get_most_relevant_history(read_cur, write_cur, prompt_enc)
 
     # print(most_relevant_history)
 
-    updated_prompt = prompt_texts.get_background_prompt_section()
+    updated_prompt = "Background: \n"       # prompt_texts.get_background_prompt_section()
 
     for item in most_relevant_history:
-        summary_prompt = ' '.join((prompt_texts.get_summary_prompt() + item[0] + " " + item[1]).split())
+        summary_prompt = ' '.join((prompt_texts.get_summary_prompt() + item[0]).split())
         response = query_gpt(prompt_text=summary_prompt, model="text-curie-001", max_t=300, temp=0.5)
         updated_prompt = updated_prompt + response["choices"][0]["text"]
 
@@ -195,10 +194,55 @@ def get_background_from_previous(prompt_enc) -> str:
     return updated_prompt
 
 
+def ask_gpt_the_question(prompt: str, args) -> str:
+    """Clarify the prompt by getting GPT to ask the user for more information.
+    The returned full prompt will be the original prompt plus the clarification.
+    It will not include the replies from GPT, because this doesn't help with responses from GPT."""
+
+    need_clarification = True
+    updated_prompt = prompt
+    safety_count = 0
+    response_text: str = ""
+    response = None
+
+    while need_clarification and safety_count < 4:
+        
+        safety_count += 1   # Make sure we don't get stuck in a loop of doom.
+        
+        # Ask GPT if it needs any clarification.
+        clarification_prompt = ' '.join((updated_prompt + prompt_texts.get_conv_plan_prompt()).split())
+        response = query_gpt(prompt_text=clarification_prompt, 
+                             model=args.model, max_t=args.tokens, temp=args.temperature)
+        response_text = response["choices"][0]["text"]
+        print(f"\n{response_text}\n")
+        print("-" * 20)
+        print(f'The message ended due to {response["choices"][0]["finish_reason"]}.')
+        
+        # Check if this is a clarification question.
+        class_prompt = ' '.join((prompt_texts.get_question_or_answer_prompt() + "\n" + response_text).split())
+        classification_response = query_gpt(class_prompt, model="text-davinci-003", max_t=100, temp=0.9)
+        classification_response_text = classification_response["choices"][0]["text"]
+        try:
+            classification = int(re.search(r'\d+', classification_response_text).group())
+        except:
+            classification = 2      # If it can't find a number, assume it's not a clarification question.
+        
+        # print(f"The classification is {classification}.")
+        if classification == 1:
+            additional_info = input("Please enter any clarifications: ")
+            updated_prompt = updated_prompt + "\n" + additional_info
+        else:
+            need_clarification = False
+
+    return updated_prompt, response
+
+        
+
 def send_prompt(new_prompt, args):
     """Send the prompt to GPT.
     Get an importance score for later.
     """
+
     # Importance requires davinci.
     importance: int
     importance_prompt = ' '.join((prompt_texts.get_importance_prompt() + new_prompt).split())
@@ -208,21 +252,23 @@ def send_prompt(new_prompt, args):
     prompt_enc = tokenizer.encode(new_prompt, add_special_tokens=True, truncation=True, return_tensors="pt",
                                   padding='max_length', max_length=512).float()
 
-    # Get the background from previous conversations if the user chose that options
+    # Get the background from previous conversations if the user chose that option
+    background: str = ""
+    full_prompt: str = ""
     if args.background:
-        output_text = get_background_from_previous(prompt_enc) + \
-                      "\n\n" + "-" * 20 + "\nThe following is the prompt:\n" + new_prompt + "\n" + "-" * 20 + "\n"
-        full_prompt = get_background_from_previous(prompt_enc) + " " + "The following is the prompt: " + new_prompt
-    else:
-        full_prompt = "The following is the prompt: " + new_prompt
-        output_text = "\n\n" + "-" * 20 + "\nThe following is the prompt:\n" + new_prompt + "\n" + "-" * 20 + "\n"
-    print(output_text)
+        background = get_background_from_previous(prompt_enc)
+        
+    
+    full_prompt = "Question: " + new_prompt + "\n\n" + background
+    
+    # See if GPT wants to clarify the prompt at all, and if so, add the clarification to the prompt background.
+    final_prompt, response = ask_gpt_the_question(full_prompt, args)
 
     # Now actually send the prompt.
-    response = query_gpt(" ".join(full_prompt.split()), args.model, args.tokens, args.temperature)
-    manage_response(response)
+    #response = query_gpt(" ".join(full_prompt.split()), args.model, args.tokens, args.temperature)
+    # manage_response(response)
 
-    memory = (response["id"], full_prompt, response["usage"]["total_tokens"], args.model,
+    memory = (response["id"], final_prompt, response["usage"]["total_tokens"], args.model,
               response["choices"][0]["finish_reason"], response["choices"][0]["text"], importance, str(prompt_enc.numpy().tolist()))
     add_to_database(memory)
 

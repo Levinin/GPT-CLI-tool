@@ -1,6 +1,13 @@
 # GPT Command Line App
 
-This application is intended as a fairly simple CLI tool that will grow over time. Feel free to use it as you wish.
+This application will allow you to interact with the OpenAI GPT 3 API from the command line. It is intended to be a simple helper 
+for my everyday queries. <br>
+
+The program does a few things:
+- It accepts a prompt from the command line or from a specified file.
+- It records all prompts and responses to a sqlite3 database.
+- It allows you to use this history to supplement the prompt. This feature is inspired by this paper: https://arxiv.org/abs/2304.03442
+- It asks GPT for any clarifying questions that will help it give a better answer.
 
 
 ## Setup
@@ -29,8 +36,8 @@ sqlite> PRAGMA table_info(history);
 
 For API access you will need to do the following once you have a key:<br>
 
-Set OPENAI_API_KEY environment variable to your own API key.<br>
-Set OPENAI_ORG environment variable to your own org ID.
+Set `OPENAI_API_KEY` environment variable to your own API key.<br>
+Set `OPENAI_ORG` environment variable to your own org ID.
 
 This is best done in your ~/.bashrc file with something like:
 > export OPENAI_API_KEY='....'<br>
@@ -39,7 +46,7 @@ This is best done in your ~/.bashrc file with something like:
 I also recommend creating an alias such as:
 > alias gpt='python path/to/python file'
 
-so you can run it from anywhere very easily. 
+so you can run it from anywhere very easily. I use it from guake, so it is always available with F12.
 
 ## Options
 To view the help options simply:
@@ -67,7 +74,7 @@ All options except --file and --prompt have defaults, so it is possible to run a
 > gpt -f prompt.txt<br>
 > gpt -p "Give me 3 activities that are fun for kids birthday parties."
 
-Output is to the terminal, to redirect to file use normal cli tools.
+Output is to the terminal, to redirect to file use normal cli tools, of course the output is always saved to sqlite3 anyway.
 
 ## Defaults
 
@@ -89,10 +96,9 @@ compete with the way ChatGPT works, this is intended to allow a longer-term memo
 more helpful over time as the number of prompts on a particular topic increases. Personal usage so far indicates this 
 additional context helps since it grounds the responses in my previous questions making them easier to understand.
 
-#### Note, in this mode it does submit more than 1 prompt, so it will use more tokens than you expect from the raw prompt text you have entered.
-
+#### __General Note, this application does submit more than 1 prompt, so it will use more tokens than you expect from the raw prompt text you have entered.__
+<br>
 
 ## Future
-Plan is to add some dialog management by which the language model will ask some basic clarifying questions when it's not sure 
-how to answer. 
+Refine the prompt and the way it tokenizes history, sometimes the similarity scores in particular are not very accurate. It might be better to use topic-based clustering.<br>
 
