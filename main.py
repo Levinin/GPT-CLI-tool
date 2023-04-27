@@ -29,7 +29,7 @@ def define_parser() -> argparse.ArgumentParser:
     parser.add_argument("-m", "--model", type=str, help="The model to use.",
                         choices=["text-ada-001", "text-davinci-003", "text-curie-001"],
                         required=False, default="text-davinci-003")
-    parser.add_argument("-t", "--temperature", type=float, help="The model temperature.", required=False, default=0.9)
+    parser.add_argument("-t", "--temperature", type=float, help="The model temperature.", required=False, default=0.5)
     parser.add_argument("-o", "--tokens", type=int, help="Max tokens for the generated reply.",
                         required=False, default=1000)
     parser.add_argument("-f", "--file", type=str, help="A file containing a prompt.", required=False)
@@ -259,7 +259,7 @@ def send_prompt(new_prompt, args):
         background = get_background_from_previous(prompt_enc)
         
     
-    full_prompt = "Question: " + new_prompt + "\n\n" + background
+    full_prompt = "Prompt: " + new_prompt + "\n\n" + background
     
     # See if GPT wants to clarify the prompt at all, and if so, add the clarification to the prompt background.
     final_prompt, response = ask_gpt_the_question(full_prompt, args)
