@@ -69,7 +69,7 @@ options:
   -f FILE, --file FILE  A file containing a prompt.
   -b, --background      Use prompt history to supplement the interaction.
 ```
-
+ 
 All options except --file and --prompt have defaults, so it is possible to run as follows:
 > gpt -f prompt.txt<br>
 > gpt -p "Give me 3 activities that are fun for kids birthday parties."
