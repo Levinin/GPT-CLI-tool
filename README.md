@@ -7,7 +7,8 @@ The program does a few things:
 - It accepts a prompt from the command line or from a specified file.
 - It records all prompts and responses to a sqlite3 database.
 - It allows you to use this history to supplement the prompt. This feature is inspired by the paper <a href=https://arxiv.org/abs/2304.03442>Generative Agents: Interactive Simulacra of Human Behavior</a>.
-- It asks GPT for any clarifying questions that will help it give a better answer (see examples below).
+- It asks GPT for any clarifying questions that will help it give a better answer (see examples below). 
+This is not perfect because it asks GPT to classify its own responses, but it does work most of the time.
 
 
 ## Setup
@@ -94,12 +95,18 @@ If the `--background` option is selected, it will scan through the history and s
 related to the question being asked. This is still a bit rough, and it isn't always correct. This is not intended to 
 compete with the way ChatGPT works, this is intended to allow a longer-term memory over a longer period and will be 
 more helpful over time as the number of prompts on a particular topic increases. Personal usage so far indicates this 
-additional context helps since it grounds the responses in my previous questions making them easier to understand.
+additional context helps since it grounds the responses in my previous questions making them easier to understand. 
+However, it does sometimes match to previous prompts that have no relation to what 
+I'm currently asking which can occasionally lead to confused answers.
 
 #### __General Note, this application does submit more than 1 prompt, so it will use more tokens than you expect from the raw prompt text you have entered.__
 <br>
 
 ## Example conversations
+
+This first example shows that it can help to disambiguate the topic of the question. 
+```terminal
+
 ```terminal
 $ gpt -p "What is the most important consideration in continual learning?"
 
@@ -125,7 +132,8 @@ received from sensors or other robots. Finally, the robot must have robust safet
 protocols in place so that it does not cause harm while carrying out its task.
 ```
 
-I'm not taking decoration advice from a computer (yet), but it shows clarification questions for a vague question and how these shape the final reply.
+I'm not taking decoration advice from a computer (yet), but this example shows 
+how it can provide clarification for a vague question and how these shape the final reply.
 
 ```terminal
 $ gpt -p "How should I redecorate my bedroom?"
@@ -194,10 +202,11 @@ intentional rather than cluttered; this can help make even older pieces look new
 again!
 
 ```
-```
 
 <br>
 
 ## Future
-Refine the prompt and the way it tokenizes history, sometimes the similarity scores in particular are not very accurate. It might be better to use topic-based clustering.<br>
+Refine the prompts and the way it tokenizes history, sometimes the similarity 
+scores in particular are not very accurate. 
+
 
