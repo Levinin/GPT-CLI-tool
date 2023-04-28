@@ -80,7 +80,7 @@ def get_database_connection() -> sqlite3.Connection:
     conn = None
     try:
         conn = sqlite3.connect(os.getenv("PROMPT_HISTORY_DB"))
-        print("Connection to SQLite DB successful")
+        # print("Connection to SQLite DB successful")
     except Error as e:
         print(f"Error connecting to database: {e}")
     return conn
@@ -136,7 +136,8 @@ def get_most_relevant_history(read_cur, write_cur, prompt_enc):
 
     read_cur.execute("SELECT * FROM calc_scores;")
 
-    # Each row will be a tuple in the form (id, 'What colour is the sky?', 'blue', 10, '2023-04-20 16:35:10', <embedding>, None, None, None)
+    # Each row will be a tuple in the form:
+    # (id, 'What colour is the sky?', 'blue', 10, '2023-04-20 16:35:10', <embedding>, None, None, None)
     for row in read_cur:
         # Compare the prompt embedding to the history embedding.
         similarity_score = torch.nn.functional.cosine_similarity(prompt_enc, torch.tensor(eval(row[5])), dim=-1).item()
@@ -194,7 +195,7 @@ def get_background_from_previous(prompt_enc) -> str:
     return updated_prompt
 
 
-def ask_gpt_the_question(prompt: str, args) -> str:
+def ask_gpt_the_question(prompt: str, args) -> tuple[str, dict]:
     """Clarify the prompt by getting GPT to ask the user for more information.
     The returned full prompt will be the original prompt plus the clarification.
     It will not include the replies from GPT, because this doesn't help with responses from GPT."""
@@ -202,7 +203,6 @@ def ask_gpt_the_question(prompt: str, args) -> str:
     need_clarification = True
     updated_prompt = prompt
     safety_count = 0
-    response_text: str = ""
     response = None
 
     while need_clarification and safety_count < 4:
@@ -211,6 +211,7 @@ def ask_gpt_the_question(prompt: str, args) -> str:
         
         # Ask GPT if it needs any clarification.
         clarification_prompt = ' '.join((updated_prompt + prompt_texts.get_conv_plan_prompt()).split())
+        # print("clarification prompt: ", clarification_prompt)
         response = query_gpt(prompt_text=clarification_prompt, 
                              model=args.model, max_t=args.tokens, temp=args.temperature)
         response_text = response["choices"][0]["text"]
@@ -222,11 +223,13 @@ def ask_gpt_the_question(prompt: str, args) -> str:
         class_prompt = ' '.join((prompt_texts.get_question_or_answer_prompt() + "\n" + response_text).split())
         classification_response = query_gpt(class_prompt, model="text-davinci-003", max_t=100, temp=0.9)
         classification_response_text = classification_response["choices"][0]["text"]
-        try:
-            classification = int(re.search(r'\d+', classification_response_text).group())
-        except:
+
+        class_text = re.search(r'\d+', classification_response_text)
+        if class_text is None:
             classification = 2      # If it can't find a number, assume it's not a clarification question.
-        
+        else:
+            classification = int(class_text.group())
+
         # print(f"The classification is {classification}.")
         if classification == 1:
             additional_info = input("Please enter any clarifications: ")
@@ -236,40 +239,39 @@ def ask_gpt_the_question(prompt: str, args) -> str:
 
     return updated_prompt, response
 
-        
 
 def send_prompt(new_prompt, args):
     """Send the prompt to GPT.
     Get an importance score for later.
     """
-
-    # Importance requires davinci.
-    importance: int
-    importance_prompt = ' '.join((prompt_texts.get_importance_prompt() + new_prompt).split())
-    importance = get_prompt_importance(query_gpt(importance_prompt, "text-davinci-003", 20, 0.9))
-
     # Tokenize the prompt for comparison and storage.
     prompt_enc = tokenizer.encode(new_prompt, add_special_tokens=True, truncation=True, return_tensors="pt",
                                   padding='max_length', max_length=512).float()
 
     # Get the background from previous conversations if the user chose that option
     background: str = ""
-    full_prompt: str = ""
     if args.background:
+        print("Checking previous conversations for background.")
         background = get_background_from_previous(prompt_enc)
-        
-    
+
     full_prompt = "Prompt: " + new_prompt + "\n\n" + background
     
-    # See if GPT wants to clarify the prompt at all, and if so, add the clarification to the prompt background.
+    # Let's ask GPT the question now.
     final_prompt, response = ask_gpt_the_question(full_prompt, args)
 
-    # Now actually send the prompt.
-    #response = query_gpt(" ".join(full_prompt.split()), args.model, args.tokens, args.temperature)
-    # manage_response(response)
+    # Importance requires davinci.
+    importance: int
+    importance_prompt = ' '.join((prompt_texts.get_importance_prompt() + new_prompt).split())
+    importance = get_prompt_importance(query_gpt(importance_prompt, "text-davinci-003", 20, 0.9))
 
-    memory = (response["id"], final_prompt, response["usage"]["total_tokens"], args.model,
-              response["choices"][0]["finish_reason"], response["choices"][0]["text"], importance, str(prompt_enc.numpy().tolist()))
+    memory = (response["id"],
+              final_prompt,
+              response["usage"]["total_tokens"],
+              args.model,
+              response["choices"][0]["finish_reason"],
+              response["choices"][0]["text"],
+              importance,
+              str(prompt_enc.numpy().tolist()))
     add_to_database(memory)
 
 
