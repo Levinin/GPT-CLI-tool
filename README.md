@@ -8,7 +8,7 @@ The program does a few things:
 - It records all prompts and responses to a sqlite3 database.
 - It allows you to use this history to supplement the prompt. This feature is inspired by the paper <a href=https://arxiv.org/abs/2304.03442>Generative Agents: Interactive Simulacra of Human Behavior</a>.
 - It asks GPT for any clarifying questions that will help it give a better answer (see examples below). 
-This is not perfect because it asks GPT to classify its own responses, but it does work most of the time.
+This is not perfect because at times it answers its own clarification questions, especially on higher temperatures.
 
 
 ## Setup
@@ -82,7 +82,7 @@ Output is to the terminal, to redirect to file use normal cli tools, of course t
 | option      | default          |
 |-------------|------------------|
 | model       | text-davinci-003 |
-| temperature | 0.5              |
+| temperature | 0.1              |
 | tokens      | 1000             |
 
 
@@ -105,7 +105,6 @@ I'm currently asking which can occasionally lead to confused answers.
 ## Example conversations
 
 This first example shows that it can help to disambiguate the topic of the question. 
-```terminal
 
 ```terminal
 $ gpt -p "What is the most important consideration in continual learning?"
