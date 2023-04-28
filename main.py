@@ -1,3 +1,24 @@
+# Author:   Andy Edmondson
+# Date:     28-04-23
+#
+# Purpose:  Main program flow.
+# Content:  define_parser
+#           query_gpt
+#           build_prompt
+#           manage_response
+#           get_prompt_from_file
+#           get_database_connection
+#           add_to_database
+#           get_prompt_importance
+#           create_temp_calc_table
+#           get_most_relevant_history
+#           get_background_from_previous
+#           adk_gpt_the_question
+#           send_prompt
+#           main
+
+
+
 import os
 import argparse
 import re
@@ -6,8 +27,9 @@ import sqlite3  # For prompt history
 from sqlite3 import Error
 from datetime import datetime
 
-import transformers
-import torch
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 import openai
 
@@ -17,10 +39,7 @@ import prompt_texts
 openai.organization = os.getenv("OPENAI_ORG")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-tokenizer = transformers.GPT2Tokenizer.from_pretrained('gpt2')
-tokenizer.pad_token = 0
-
-stop_char = "#*#"
+tokenizer = SentenceTransformer('bert-base-nli-mean-tokens')
 
 
 def define_parser() -> argparse.ArgumentParser:
@@ -45,10 +64,9 @@ def query_gpt(prompt_text: str, model: str, max_t: int = 1000, temp: float = 0.9
         prompt=prompt_text,
         temperature=temp,
         max_tokens=max_t,
-        #top_p=1.0,
+        top_p=1.0,
         frequency_penalty=1.2,
         presence_penalty=0.0,
-        # stop=stop_char
     )
 
 
@@ -140,7 +158,7 @@ def get_most_relevant_history(read_cur, write_cur, prompt_enc):
     # (id, 'What colour is the sky?', 'blue', 10, '2023-04-20 16:35:10', <embedding>, None, None, None)
     for row in read_cur:
         # Compare the prompt embedding to the history embedding.
-        similarity_score = torch.nn.functional.cosine_similarity(prompt_enc, torch.tensor(eval(row[5])), dim=-1).item()
+        similarity_score = cosine_similarity(prompt_enc.reshape(1, -1), np.array(eval(row[5])).reshape(1, -1)).flatten()
         # print(f"Got a similarity score of {similarity_score}")
         importance_score = (row[3] - 6) / 4
         recency_score = (datetime.fromisoformat(row[4]) - oldest) / (newest - oldest)
@@ -245,8 +263,7 @@ def send_prompt(new_prompt, args):
     Get an importance score for later.
     """
     # Tokenize the prompt for comparison and storage.
-    prompt_enc = tokenizer.encode(new_prompt, add_special_tokens=True, truncation=True, return_tensors="pt",
-                                  padding='max_length', max_length=512).float()
+    prompt_enc = tokenizer.encode([new_prompt]).reshape(1, -1)
 
     # Get the background from previous conversations if the user chose that option
     background: str = ""
@@ -271,7 +288,7 @@ def send_prompt(new_prompt, args):
               response["choices"][0]["finish_reason"],
               response["choices"][0]["text"],
               importance,
-              str(prompt_enc.numpy().tolist()))
+              str(prompt_enc.tolist()))
     add_to_database(memory)
 
 

@@ -14,8 +14,8 @@ This is not perfect because at times it answers its own clarification questions,
 ## Setup
 
 This app uses a few key packages as shown here:
-> transformers<br>
-> pytorch<br>
+> sentence-transformers<br>
+> sklearn<br>
 > openai<br>
 
 These can all be installed using mamba to keep everything together, but just use your favourite environment manager.<br>
@@ -202,10 +202,56 @@ again!
 
 ```
 
+
+```terminal
+$ gpt -p "Are the two phrases 'A polar bear swims between icebergs in the Arctic Ocean.' 
+and 'A large white bear swims between blocks of ice in a Northern sea.' semantically similar?"
+
+
+
+To answer the question, I would need to ask some clarifying questions such as: 
+1. Are the two phrases referring to the same animal? 
+2. Is the location of both phrases in a cold climate? 
+3. Are both phrases describing an aquatic activity? 
+4. Is there any difference in size between what is being described in each phrase? 
+5. Does either phrase mention a specific color for the animal or object being described?  
+Once I have enough information, I can then answer whether or not these two phrases are 
+semantically similar. If all of my questions are answered affirmatively, then it is 
+likely that these two phrases are semantically similar as they describe a large white 
+bear swimming between blocks of ice (or icebergs) in a cold climate (the Arctic Ocean 
+or Northern sea).
+
+--------------------
+Please enter any clarifications: The answer to all questions is yes.
+
+
+
+To answer your question, I would need to know more about the context of the two phrases. 
+Are they both describing a scene in nature? Are they part of a story or poem? Is one 
+phrase referring to an animal and the other referring to something else? 
+
+Once I have this information, I can determine whether or not the two phrases are 
+semantically similar. For example, if both phrases are describing a scene in nature 
+with an animal swimming between icebergs/blocks of ice in a Northern sea, then it is 
+likely that they are semantically similar. However, if one phrase is describing an 
+animal and the other is describing something else (e.g., a boat), then it is unlikely 
+that they are semantically similar.
+
+--------------------
+Please enter any clarifications: Yes, a scene in nature.
+
+
+
+Yes, the two phrases are semantically similar. They both describe a scene in nature 
+where a large white bear is swimming between blocks of ice in a Northern sea, which 
+could be the Arctic Ocean.
+
+```
+
+
 <br>
 
 ## Future
-Refine the prompts and the way it tokenizes history, sometimes the similarity 
-scores in particular are not very accurate. 
+Refine the prompts.
 
 
